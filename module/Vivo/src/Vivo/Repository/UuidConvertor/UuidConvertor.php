@@ -55,7 +55,7 @@ class UuidConvertor implements UuidConvertorInterface
             $uuid   = $this->pathToUuid[$path];
         } else {
             $query  = new TermQuery(new IndexerTerm($path, '\path'));
-            $result = $this->indexer->find($query);
+            $result = $this->indexer->find($query, array('page_size' => 1));
             if ($result->getTotalHitCount() > 0) {
                 $hits   = $result->getHits();
                 /** @var $hit \Vivo\Indexer\QueryHit */
@@ -82,7 +82,7 @@ class UuidConvertor implements UuidConvertorInterface
             $path   = $this->uuidToPath[$uuid];
         } else {
             $query  = new TermQuery(new IndexerTerm($uuid, '\uuid'));
-            $result = $this->indexer->find($query);
+            $result = $this->indexer->find($query, array('page_size' => 1));
             if ($result->getTotalHitCount() > 0) {
                 $hits   = $result->getHits();
                 /** @var $hit \Vivo\Indexer\QueryHit */

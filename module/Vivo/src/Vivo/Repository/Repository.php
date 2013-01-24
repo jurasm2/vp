@@ -227,23 +227,35 @@ class Repository implements RepositoryInterface
      */
     public function getEntity($ident)
     {
-        $identArray = $this->getUuidAndPathFromEntityIdent($ident);
-        $uuid   = $identArray['uuid'];
-        $path   = $identArray['path'];
+        $uuid   = $this->getUuidFromEntityIdent($ident);
         if ($uuid) {
-            //Get entity from watcher
-            $entity = $this->watcher->get($uuid);
-            if ($entity) {
-                return $entity;
-            }
-            //Get entity from cache
-            $entity = $this->getEntityFromCache($uuid);
-            if ($entity) {
-                return $entity;
-            }
+            //$ident is UUID
+            $path   = null;
+        } else {
+            //$ident is path
+            $path   = $ident;
         }
-        if ($path) {
-            //Get entity from storage
+        //Get entity from watcher
+        if (is_null($path)) {
+            $entity = $this->watcher->getByUuid($uuid);
+        } else {
+            $entity = $this->watcher->getByPath($path);
+        }
+        if ($entity) {
+            return $entity;
+        }
+        //We need path for the rest, so try to obtain it
+        if (is_null($path)) {
+            //Get path from UUID
+            $path   = $this->uuidConvertor->getPath($uuid);
+        }
+        if (!is_null($path)) {
+            //Get entity from cache
+            $entity = $this->getEntityFromCache($path);
+            if ($entity) {
+                return $entity;
+            }
+            //Get the entity from storage
             $entity = $this->getEntityFromStorage($path);
             if ($entity) {
                 return $entity;
@@ -271,9 +283,9 @@ class Repository implements RepositoryInterface
         /** @var $hit \Vivo\Indexer\QueryHit */
         foreach ($hits as $hit) {
             $doc    = $hit->getDocument();
-            $uuid   = $doc->getFieldValue('\\uuid');
+            $ident  = $doc->getFieldValue('\\path');
             try {
-                $entity = $this->getEntity($uuid);
+                $entity = $this->getEntity($ident);
                 $entities[] = $entity;
             } catch (Exception\EntityNotFoundException $e) {
                 //Entity not found
@@ -285,14 +297,14 @@ class Repository implements RepositoryInterface
     /**
      * Looks up an entity in cache and returns it
      * If the entity does not exist in cache or the cache is not configured, returns null
-     * @param string $uuid
+     * @param string $path
      * @return \Vivo\CMS\Model\Entity|null
      */
-    protected function getEntityFromCache($uuid)
+    protected function getEntityFromCache($path)
     {
         if ($this->cache) {
             $cacheSuccess   = null;
-            $entity         = $this->cache->getItem($uuid, $cacheSuccess);
+            $entity         = $this->cache->getItem($path, $cacheSuccess);
             if ($cacheSuccess) {
                 //Store entity to watcher
                 $this->watcher->add($entity);
@@ -628,22 +640,6 @@ class Repository implements RepositoryInterface
     */
 
     /**
-     * Reindexes whole repository
-     * Returns number of reindexed items
-     * @return int
-     */
-    public function reindexAll()
-    {
-        $list   = $this->storage->scan($this->storage->getPathBuilder()->getStoragePathSeparator());
-        $count  = 0;
-        foreach ($list as $path) {
-            $path   = '/' . $path;
-            $count  += $this->reindex($path, true);
-        }
-        return $count;
-    }
-
-    /**
      * @param string $path
      * @return Model\Entity[]
      */
@@ -759,7 +755,7 @@ class Repository implements RepositoryInterface
                 $uuid   = $entity->getUuid();
                 if ($uuid) {
                     //Watcher
-                    $this->watcher->remove($uuid);
+                    $this->watcher->removeByUuid($uuid);
                     //Cache
                     if ($this->cache) {
                         $this->cache->removeItem($uuid);
@@ -867,15 +863,12 @@ class Repository implements RepositoryInterface
     }
 
     /**
-     * Returns array('uuid' => ..., 'path' => ...) with uuid and path
-     * Either returned element may be null
-     * @param string $ident UUID, path or ref
-     * @return array
+     * If $ident represents UUID or a symbolic reference, returns corresponding UUID, otherwise null
+     * @param string $ident
+     * @return null|string
      */
-    protected function getUuidAndPathFromEntityIdent($ident)
+    protected function getUuidFromEntityIdent($ident)
     {
-        $uuid   = null;
-        $path   = null;
         if (preg_match('/^'.self::UUID_PATTERN.'$/i', $ident)) {
             //UUID
             $uuid   = $ident;
@@ -885,24 +878,10 @@ class Repository implements RepositoryInterface
             $uuid   = $matches[1];
             $uuid = strtoupper($uuid);
         } else {
-            //Attempt conversion from path
-            $uuid = $this->uuidConvertor->getUuid($ident);
-            if ($uuid) {
-                $path = $ident;
-            }
+            //The ident is not a UUID
+            $uuid   = null;
         }
-        if (!$path) {
-            if ($uuid) {
-                $path = $this->uuidConvertor->getPath($uuid);
-            } else {
-                $path = $ident;
-            }
-        }
-        $result = array(
-            'uuid'  => $uuid,
-            'path'  => $path,
-        );
-        return $result;
+        return $uuid;
     }
 
     /**

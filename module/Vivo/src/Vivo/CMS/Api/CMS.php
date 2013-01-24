@@ -68,9 +68,9 @@ class CMS
     public function getSiteByHost($host)
     {
         $query      = $this->qb->cond($host, '\\hosts');
-        $entities   = $this->getEntitiesByQuery($query);
-        if (count($entities) > 0) {
-            //Site found - if more than one site defines this host, take the first one
+        $entities   = $this->getEntitiesByQuery($query, array('page_size' => 1));
+        if (count($entities) == 1) {
+            //Site found
             $site   = reset($entities);
         } else {
             //Site not found - fallback to traversing the repo (necessary for reindexing)
