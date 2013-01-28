@@ -17,7 +17,7 @@ class SimpleSecurityManagerFactory implements FactoryInterface
     public function createService(ServiceLocatorInterface $serviceLocator)
     {
         $config             = $serviceLocator->get('config');
-        $secManConfig       = $config['vivo']['security_manager'];
+        $secManConfig       = $config['security_manager'];
         /** @var $siteEvent \Vivo\SiteManager\Event\SiteEventInterface */
         $siteEvent          = $serviceLocator->get('site_event');
         $secManOptions      = array(

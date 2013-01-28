@@ -17,7 +17,7 @@ class ZdbAbstractFactoryFactory implements FactoryInterface
     public function createService(ServiceLocatorInterface $serviceLocator)
     {
         $config                 = $serviceLocator->get('config');
-        $zdbConfig              = $config['vivo']['db_service']['abstract_factory']['zdb'];
+        $zdbConfig              = $config['db_service']['abstract_factory']['zdb'];
         $zdbAf  = new \Vivo\Service\AbstractFactory\ZendDbAdapter($zdbConfig);
         return $zdbAf;
     }

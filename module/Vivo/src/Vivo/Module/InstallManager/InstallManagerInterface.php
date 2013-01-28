@@ -42,8 +42,9 @@ interface InstallManagerInterface
      * Installs module into a site or globally (core modules)
      * @param string $module Module name (ie module namespace)
      * @param Site|string|null $site If null installs into global scope (core modules)
+     * @param array $config Module configuration
      */
-    public function install($module, $site = null);
+    public function install($module, $site = null, array $config = array());
 
     /**
      * Uninstalls a module from a site or from global scope (core modules)

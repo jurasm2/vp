@@ -17,7 +17,7 @@ class SiteManagerFactory implements FactoryInterface
     public function createService(ServiceLocatorInterface $serviceLocator)
     {
         $config                 = $serviceLocator->get('config');
-        $coreModules            = $config['vivo']['modules']['core_modules'];
+        $coreModules            = $config['modules']['core_modules'];
         $siteEvents             = $serviceLocator->get('event_manager');//new \Zend\EventManager\EventManager();
         $siteEvent              = $serviceLocator->get('site_event');
         $routeParamHost         = 'host';

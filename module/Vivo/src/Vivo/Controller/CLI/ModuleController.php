@@ -246,6 +246,7 @@ class ModuleController extends AbstractCliController
      */
     public function installAction()
     {
+        //TODO - implement support for custom db source specified in CLI
         //Prepare params
         $request    = $this->getRequest();
         /* @var $request ConsoleRequest */

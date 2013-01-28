@@ -17,8 +17,8 @@ class ModuleManagerFactoryFactory implements FactoryInterface
     public function createService(ServiceLocatorInterface $serviceLocator)
     {
         $config                 = $serviceLocator->get('config');
-        $modulePaths            = $config['vivo']['modules']['module_paths'];
-        $moduleStreamName       = $config['vivo']['modules']['stream_name'];
+        $modulePaths            = $config['modules']['module_paths'];
+        $moduleStreamName       = $config['modules']['stream_name'];
         $application            = $serviceLocator->get('application');
         /* @var $application \Zend\Mvc\Application */
         $appEvents              = $application->getEventManager();

@@ -17,7 +17,7 @@ class RemoteModuleFactory implements FactoryInterface
     public function createService(ServiceLocatorInterface $serviceLocator)
     {
         $config                 = $serviceLocator->get('config');
-        $descriptorName         = $config['vivo']['modules']['descriptor_name'];
+        $descriptorName         = $config['modules']['descriptor_name'];
         $storageFactory         = $serviceLocator->get('storage_factory');
         $pathBuilder            = $serviceLocator->get('path_builder');
         $remoteModule           = new \Vivo\Module\StorageManager\RemoteModule($storageFactory,

@@ -19,13 +19,13 @@ class IndexerFieldHelperFactory implements FactoryInterface
     public function createService(ServiceLocatorInterface $serviceLocator)
     {
         $config             = $serviceLocator->get('config');
-        if (isset($config['vivo']['indexer']['default_indexing_options'])) {
-            $defaultIndexingOptions = $config['vivo']['indexer']['default_indexing_options'];
+        if (isset($config['indexer']['default_indexing_options'])) {
+            $defaultIndexingOptions = $config['indexer']['default_indexing_options'];
         } else {
             $defaultIndexingOptions = array();
         }
-        if (isset($config['vivo']['indexer']['presets'])) {
-            $presets    = $config['vivo']['indexer']['presets'];
+        if (isset($config['indexer']['presets'])) {
+            $presets    = $config['indexer']['presets'];
         } else {
             $presets    = array();
         }

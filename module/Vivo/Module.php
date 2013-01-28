@@ -37,7 +37,7 @@ class Module implements ConsoleBannerProviderInterface, ConsoleUsageProviderInte
 
         //Register Vmodule stream
         $moduleStorage  = $sm->get('module_storage');
-        $streamName     = $config['vivo']['modules']['stream_name'];
+        $streamName     = $config['modules']['stream_name'];
         \Vivo\Module\StreamWrapper::register($streamName, $moduleStorage);
 
         $eventManager->attach(MvcEvent::EVENT_ROUTE, array ($this, 'registerTemplateResolver'));
@@ -46,7 +46,9 @@ class Module implements ConsoleBannerProviderInterface, ConsoleUsageProviderInte
 
     public function getConfig()
     {
-        return include __DIR__ . '/config/module.config.php';
+        $config = include __DIR__ . '/config/module.config.php'; //main vivo config
+        $config['cms'] = include __DIR__ . '/config/cms.config.php'; //CMS config
+        return $config;
     }
 
     public function getAutoloaderConfig()

@@ -17,7 +17,7 @@ class PdoAbstractFactoryFactory implements FactoryInterface
     public function createService(ServiceLocatorInterface $serviceLocator)
     {
         $config                 = $serviceLocator->get('config');
-        $pdoConfig              = $config['vivo']['db_service']['abstract_factory']['pdo'];
+        $pdoConfig              = $config['db_service']['abstract_factory']['pdo'];
         $pdoAf  = new \Vivo\Service\AbstractFactory\Pdo($pdoConfig);
         return $pdoAf;
     }

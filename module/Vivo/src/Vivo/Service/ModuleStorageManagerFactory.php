@@ -18,9 +18,9 @@ class ModuleStorageManagerFactory implements FactoryInterface
     {
 //                'module_storage_manager'    => function(ServiceManager $sm) {
         $config                 = $serviceLocator->get('config');
-        $modulePaths            = $config['vivo']['modules']['module_paths'];
-        $descriptorName         = $config['vivo']['modules']['descriptor_name'];
-        $defaultInstallPath     = $config['vivo']['modules']['default_install_path'];
+        $modulePaths            = $config['modules']['module_paths'];
+        $descriptorName         = $config['modules']['descriptor_name'];
+        $defaultInstallPath     = $config['modules']['default_install_path'];
         $storage                = $serviceLocator->get('module_storage');
         $storageUtil            = $serviceLocator->get('storage_util');
         $remoteModule           = $serviceLocator->get('remote_module');

@@ -19,7 +19,7 @@ class IndexerAdapterFactory implements FactoryInterface
     public function createService(ServiceLocatorInterface $serviceLocator)
     {
         $config         = $serviceLocator->get('config');
-        $idxAdapterCfg  = $config['vivo']['indexer']['adapter'];
+        $idxAdapterCfg  = $config['indexer']['adapter'];
         $type           = $idxAdapterCfg['type'];
         switch ($type) {
             case 'dummy':

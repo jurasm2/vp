@@ -284,7 +284,7 @@ class InstallManager implements InstallManagerInterface
             throw new Exception\NoSiteSpecifiedException(
                 sprintf("%s: Site specification missing when installing site module '%s'", __METHOD__, $module));
         }
-        //Prepare config
+        //Prepare module config which will be written to the site config
         //Use default db if not specified in config
         if (!isset($config['db_source'])) {
             $dbSource               = $this->options['default_db_source'];
