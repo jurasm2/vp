@@ -167,10 +167,15 @@ class ComponentFactory implements EventManagerAwareInterface
         }
 
         foreach ($mergedPanels as $name => $path) {
-            $panelDocument = $this->cms->getSiteDocument($path, $this->site);
-            $layoutComponent
-                    ->addComponent($this->getFrontComponent($panelDocument),
-                            $name);
+            if ($path == '') {
+                //if panel is not defined we use 'layout_empty_panel' component
+                $panelComponent = $this->createComponent('layout_empty_panel');
+
+            } else {
+                $panelDocument = $this->cms->getSiteDocument($path, $this->site);
+                $panelComponent = $this->getFrontComponent($panelDocument);
+            }
+            $layoutComponent->addComponent($panelComponent, $name);
         }
 
         $layoutDocumentPanels = $layout->getLayoutPanels();

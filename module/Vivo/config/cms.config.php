@@ -46,6 +46,7 @@ return array(
         'invokables' => array (
             'Vivo\CMS\UI\Root'              => 'Vivo\CMS\UI\Root',
             'Vivo\UI\ComponentContainer'    => 'Vivo\UI\ComponentContainer',
+            'layout_empty_panel'            => 'Vivo\UI\Text',
         ),
         'factories' => array (
             'Vivo\CMS\UI\Content\File'      => 'Vivo\CMS\Service\UI\Content\FileFactory',
