@@ -7,8 +7,6 @@
 <h4>LOGON UI COMPONENT</h4>
 <?php
     /** @var $form \Vivo\Form\Logon */
-    //Prepare the form
-    $form->prepare();
     //Display error notice
     if ($form->getMessages()) {
         echo '<p>' . $this->escapeHtml($this->translate('Invalid input provided')) . '</p>';
@@ -20,6 +18,7 @@
     } else {
         //User not logged in - display logon
         //Add hidden field containing the required action
+        //TODO - will be moved to the component
         $form->add(array(
             'name'          => 'act',
             'attributes'    => array(

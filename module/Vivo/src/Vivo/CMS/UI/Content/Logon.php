@@ -45,11 +45,10 @@ class Logon extends AbstractForm
         $this->redirector       = $redirector;
     }
 
-    public function init()
+    public function view()
     {
-        $form   = $this->getForm();
-        $this->view->form   = $form;
         $this->view->user   = $this->securityManager->getUserPrincipal();
+        return parent::view();
     }
 
     /**
@@ -57,7 +56,6 @@ class Logon extends AbstractForm
      */
     public function logon()
     {
-        $this->loadFromRequest();
         $form   = $this->getForm();
         if ($form->isValid()) {
             //Form is valid

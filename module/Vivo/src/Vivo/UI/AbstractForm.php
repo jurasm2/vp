@@ -28,7 +28,60 @@ abstract class AbstractForm extends Component implements RequestAwareInterface
      * Has the data been loaded from request?
      * @var bool
      */
-    protected $dataLoaded   = false;
+    protected $dataLoaded           = false;
+
+    /**
+     * When set to true, the form will be automatically prepared in view() method
+     * Redefine in descendant if necessary
+     * @var bool
+     */
+    protected $autoPrepareForm      = true;
+
+    /**
+     * When set to true, CSRF protection will be automatically added to the form
+     * Redefine in descendant if necessary
+     * @var bool
+     */
+    protected $autoAddCsrf          = true;
+
+    /**
+     * When set to true, data will be automatically loaded to the form from request
+     * Redefine in descendant if necessary
+     * @var bool
+     */
+    protected $autoLoadFromRequest  = true;
+
+    /**
+     * TTL for CSRF token
+     * Redefine in descendant if necessary
+     * @var int|null
+     */
+    protected $csrfTimeout          = 300;
+
+    public function init()
+    {
+        parent::init();
+        //Load form data from request
+        if ($this->autoLoadFromRequest) {
+            $this->loadFromRequest();
+        }
+    }
+
+    /**
+     * Returns view model or string to display directly
+     * @return \Zend\View\Model\ModelInterface|string
+     */
+    public function view()
+    {
+        $form   = $this->getForm();
+        //Prepare the form
+        if ($this->autoPrepareForm) {
+            $form->prepare();
+        }
+        //Set form to view
+        $this->view->form   = $form;
+        return parent::view();
+    }
 
     /**
      * Get ZF form
@@ -38,8 +91,19 @@ abstract class AbstractForm extends Component implements RequestAwareInterface
     {
         if($this->form == null) {
             $this->form = $this->doGetForm();
+            if ($this->autoAddCsrf) {
+                //Add CSRF field
+                $this->form->add(array(
+                    'type'      => 'Zend\Form\Element\Csrf',
+                    'name'      => 'csrf',
+                    'options'   => array(
+                        'csrf_options'  => array(
+                            'timeout'   => $this->csrfTimeout,
+                        ),
+                    ),
+                ));
+            }
         }
-
         return $this->form;
     }
 
@@ -55,7 +119,6 @@ abstract class AbstractForm extends Component implements RequestAwareInterface
         $this->request  = $request;
     }
 
-
     /**
      * Loads data into the form from the HTTP request
      * Loads GET as well as POST data (POST wins)
@@ -67,7 +130,8 @@ abstract class AbstractForm extends Component implements RequestAwareInterface
         }
         $data   = $this->request->getQuery()->toArray();
         $data   = array_merge($data, $this->request->getPost()->toArray());
-        $this->getForm()->setData($data);
+        $form   = $this->getForm();
+        $form->setData($data);
         $this->dataLoaded   = true;
     }
 
