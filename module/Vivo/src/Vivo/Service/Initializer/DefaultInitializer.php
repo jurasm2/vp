@@ -20,6 +20,10 @@ class DefaultInitializer implements InitializerInterface
         if ($instance instanceof RequestAwareInterface) {
             $instance->setRequest($serviceLocator->get('request'));
         }
+        //inject redirector
+        if ($instance instanceof RedirectorAwareInterface) {
+            $instance->setRedirector($serviceLocator->get('redirector'));
+        }
         //inject site event
         if ($instance instanceof SiteEventAwareInterface) {
             $instance->setSiteEvent($serviceLocator->get('site_event'));

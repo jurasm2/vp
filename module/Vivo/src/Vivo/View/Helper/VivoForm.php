@@ -14,32 +14,52 @@ use Zend\Form\Element;
 class VivoForm extends AbstractHelper
 {
     /**
+     * Default view helper options
+     * @var array
+     */
+    protected $defaultOptions   = array(
+        'renderFormTag'     => true,
+    );
+
+    /**
      * Invoke the helper as a PhpRenderer method call
      * @param \Zend\Form\Form $form
+     * @param array $options
      * @return VivoForm
      */
-    public function __invoke(ZfForm $form = null)
+    public function __invoke(ZfForm $form = null, array $options = array())
     {
         if (!$form) {
             return $this;
         }
-        return $this->render($form);
+        return $this->render($form, $options);
     }
 
     /**
      * Renders the form
      * @param \Zend\Form\Form $form
+     * @param array $options
      * @return string
      */
-    public function render(ZfForm $form)
+    public function render(ZfForm $form, array $options = array())
     {
+        $options    = array_merge($this->defaultOptions, $options);
         /** @var $formVh \Zend\Form\View\Helper\Form */
         $formVh             = $this->getView()->plugin('form');
         /** @var $vivoFormFieldsetVh VivoFormFieldset */
         $vivoFormFieldsetVh = $this->getView()->plugin('vivoFormFieldset');
-        $html               = $formVh->openTag($form);
-        $html               .= $vivoFormFieldsetVh->render($form, false);
-        $html               .= $formVh->closeTag();
+        $html               = '';
+        if ($options['renderFormTag']) {
+            $html               .= $formVh->openTag($form);
+        }
+        $fieldsetOptions    = array(
+            'renderFieldsetTag'         => false,
+            'renderChildFieldsetTags'   => true,
+        );
+        $html               .= $vivoFormFieldsetVh->render($form, $fieldsetOptions);
+        if ($options['renderFormTag']) {
+            $html               .= $formVh->closeTag();
+        }
         return $html;
     }
 }

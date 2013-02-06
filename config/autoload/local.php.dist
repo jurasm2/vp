@@ -29,6 +29,23 @@ return array(
             ),
         ),
     ),
+    //Core setup
+    'setup'         => array(
+        'db'    => array(
+            //Name of db connection used by core
+            'db_source'     => 'local_vivo_dev',
+        ),
+    ),
+    'cms'  => array(
+        'security_manager_db'  => array(
+            'options'           => array(
+                'super_password'        => 'Vivo.super.Pwd.497',
+                'super_access_networks' => array(
+                    '127.0.0.1',
+                ),
+            ),
+        ),
+    ),
     'indexer'   => array(
         'adapter'   => array(
             'type'      => 'solr',
@@ -45,7 +62,7 @@ return array(
     ),
     'modules'    => array(
         //Default db source used for modules
-        'default_db_source'     => 'local_vivo_dev',
+        'default_db_source'     => 'vivo_db',
     ),
 
 );

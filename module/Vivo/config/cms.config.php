@@ -19,6 +19,11 @@ return array(
             'Vivo\CMS\UI\Content\Overview:Description' => __DIR__.'/../view/Vivo/CMS/UI/Content/Overview.Description.phtml',
             'Vivo\CMS\UI\Content\Logon'         => __DIR__.'/../view/Vivo/CMS/UI/Content/Logon.phtml',
             'Vivo\UI\ComponentContainer'        => __DIR__.'/../view/Vivo/UI/ComponentContainer.phtml',
+            'Vivo\UI\TabContainer'              => __DIR__.'/../view/Vivo/UI/TabContainer.phtml',
+            'Vivo\UI\Ribbon'                    => __DIR__.'/../view/Vivo/UI/TabContainer.phtml',
+            'Vivo\UI\Ribbon\Tab'                => __DIR__.'/../view/Vivo/UI/Ribbon/Tab.phtml',
+            'Vivo\UI\Ribbon\Group'              => __DIR__.'/../view/Vivo/UI/Ribbon/Group.phtml',
+            'Vivo\UI\Ribbon\Item'               => __DIR__.'/../view/Vivo/UI/Ribbon/Item.phtml',
         ),
         'custom_templates' => array (
             // custom selectable templates
@@ -46,6 +51,7 @@ return array(
         'invokables' => array (
             'Vivo\CMS\UI\Root'              => 'Vivo\CMS\UI\Root',
             'Vivo\UI\ComponentContainer'    => 'Vivo\UI\ComponentContainer',
+            'Vivo\UI\TabContainer'          => 'Vivo\UI\TabContainer',
             'layout_empty_panel'            => 'Vivo\UI\Text',
         ),
         'factories' => array (
@@ -57,6 +63,7 @@ return array(
             'Vivo\UI\Page'                  => 'Vivo\Service\UI\PageFactory',
 
             'security_manager'              => 'Vivo\Service\SimpleSecurityManagerFactory',
+//            'security_manager'              => 'Vivo\Service\DbSecurityManagerFactory',
         ),
         'aliases' => array(
         ),
@@ -113,4 +120,8 @@ return array(
             ),
         ),
     ),
+    'output_filters' => array (
+        //register output filters
+        //'Vivo\Http\Filter\UpperCase',
+    )
 );

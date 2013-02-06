@@ -1,6 +1,7 @@
 <?php
 namespace Vivo\CMS\Api;
 
+use Vivo\CMS\Model\Site;
 use Vivo\CMS\Exception\InvalidArgumentException;
 use Vivo\CMS\Model;
 use Vivo\CMS\Workflow;
@@ -78,7 +79,7 @@ class CMS
             $site   = null;
             foreach ($sites as $siteIter) {
                 /** @var $siteIter \Vivo\CMS\Model\Site */
-                if (in_array($host, $siteIter->getHosts())) {
+                if (($siteIter instanceof Site) and (in_array($host, $siteIter->getHosts()))) {
                     $site   = $siteIter;
                     break;
                 }
@@ -445,6 +446,28 @@ class CMS
                 $contents[] = $content;
             }
         }
+        return $contents;
+    }
+
+    /**
+     * @param Model\Document $document
+     * @return array <\Vivo\CMS\Model\ContentContainer>
+     */
+    public function getContentContainers(Model\Document $document)
+    {
+        $containers = $this->repository->getChildren($document, 'Vivo\CMS\Model\ContentContainer');
+
+        return $containers;
+    }
+
+    /**
+     * @param Model\ContentContainer $container
+     * @return array <\Vivo\CMS\Model\Content>
+     */
+    public function getContents(Model\ContentContainer $container)
+    {
+        $contents = $this->repository->getChildren($container, 'Vivo\CMS\Model\Content');
+
         return $contents;
     }
 

@@ -36,4 +36,5 @@ class Redirector
         $response->getHeaders()->addHeaderLine('Location', $url);
         $response->sendHeaders();
         die();
-    }}
+    }
+}

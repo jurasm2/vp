@@ -16,7 +16,7 @@ class ComponentContainer extends Component implements ComponentContainerInterfac
     /**
      * @var array of ComponentInterface
      */
-    private $components = array();
+    protected $components = array();
 
     public function init()
     {

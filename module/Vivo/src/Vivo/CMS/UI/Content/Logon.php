@@ -3,8 +3,7 @@ namespace Vivo\CMS\UI\Content;
 
 use Vivo\CMS\UI\AbstractForm;
 use Vivo\Form\Logon as ZfFormLogon;
-use Vivo\CMS\Security\AbstractManager as AbstractSecurityManager;
-use Vivo\Util\Redirector;
+use Vivo\CMS\Security\Manager\AbstractManager as AbstractSecurityManager;
 
 use Zend\Form\Form as ZfForm;
 
@@ -27,22 +26,14 @@ class Logon extends AbstractForm
     protected $securityDomain;
 
     /**
-     * Redirector
-     * @var Redirector
-     */
-    protected $redirector;
-
-    /**
      * Constructor
      * @param AbstractSecurityManager $securityManager
      * @param $securityDomain
-     * @param \Vivo\Util\Redirector $redirector
      */
-    public function __construct(AbstractSecurityManager $securityManager, $securityDomain, Redirector $redirector)
+    public function __construct(AbstractSecurityManager $securityManager, $securityDomain)
     {
         $this->securityManager  = $securityManager;
         $this->securityDomain   = $securityDomain;
-        $this->redirector       = $redirector;
     }
 
     public function view()

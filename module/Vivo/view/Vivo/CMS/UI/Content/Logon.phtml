@@ -13,7 +13,8 @@
     }
     if ($user) {
         //A user is already logged in - display logoff
-        echo $this->escapeHtml($this->translate('User: ')) . $user->username;
+        /** @var $user \Vivo\Security\Principal\UserInterface */
+        echo $this->escapeHtml($this->translate('User: ')) . $user->getUsername();
         echo '<br>' . $this->actionLink('logoff', 'Logout');
     } else {
         //User not logged in - display logon

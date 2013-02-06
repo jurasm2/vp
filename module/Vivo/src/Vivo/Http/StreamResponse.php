@@ -1,6 +1,10 @@
 <?php
 namespace Vivo\Http;
 
+use Vivo\IO\ByteArrayInputStream;
+
+use Vivo\IO\OutputStreamInterface;
+
 use Vivo\IO\CloseableInterface;
 use Vivo\IO\FileOutputStream;
 use Vivo\IO\InputStreamInterface;
@@ -18,22 +22,46 @@ class StreamResponse extends PHPResponse
     /**
      * @var \Vivo\IO\InputStreamInterface
      */
-    private $stream;
+    private $inputStream;
 
     /**
-     * @param InputStreamInterface $stream
+     * @var \Vivo\IO\OutputStreamInterface
      */
-    public function setStream(InputStreamInterface $stream)
-    {
-        $this->stream = $stream;
-    }
+    private $outputStream;
 
     /**
      * @return \Vivo\IO\InputStreamInterface
      */
-    public function getStream()
-    {
-        return $this->stream;
+    public function getInputStream() {
+        if ($this->inputStream == null) {
+            $this->inputStream = new ByteArrayInputStream($this->content);
+        }
+
+        return $this->inputStream;
+    }
+
+    /**
+     * @param InputStreamInterface $inputStream
+     */
+    public function setInputStream(InputStreamInterface $inputStream) {
+        $this->inputStream = $inputStream;
+    }
+
+    /**
+     * @return \Vivo\IO\OutputStreamInterface
+     */
+    public function getOutputStream() {
+        if ($this->outputStream == null) {
+            $this->outputStream = new FileOutputStream('php://output');
+        }
+        return $this->outputStream;
+    }
+
+    /**
+     * @param OutputStreamInterface $outputStream
+     */
+    public function setOutputStream(OutputStreamInterface $outputStream) {
+        $this->outputStream = $outputStream;
     }
 
     /* (non-PHPdoc)
@@ -45,17 +73,17 @@ class StreamResponse extends PHPResponse
             return $this;
         }
 
-        if (!$source = $this->getStream()) {
-            return parent::sendContent();
-        }
-
-        $target = new FileOutputStream('php://output');
+        $source = $this->getInputStream();
+        $target = $this->getOutputStream();
         $util = new IOUtil();
         $util->copy($source, $target);
         if ($source instanceof CloseableInterface) {
             $source->close();
         }
-        $target->close();
+        if ($target instanceof CloseableInterface) {
+            $target->close();
+        }
+
         $this->contentSent = true;
         return $this;
     }
