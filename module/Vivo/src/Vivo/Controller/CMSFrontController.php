@@ -113,7 +113,7 @@ class CMSFrontController implements DispatchableInterface,
             $this->event->setViewModel($result);
         } elseif ($result instanceof InputStreamInterface) {
             //skip rendering phase
-            $response->setStream($result);
+            $response->setInputStream($result);
             return $response;
         } elseif (is_string($result)) {
             //skip rendering phase

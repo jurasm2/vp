@@ -1,18 +1,18 @@
 <?php
-namespace Vivo\CMS\Security\Simple;
+namespace Vivo\CMS\Security\Manager;
 
-use Vivo\CMS\Security\AbstractManager;
+use Vivo\Security\Principal;
 
 use Zend\Session\SessionManager;
 
 use stdClass;
 
 /**
- * Manager
+ * Simple
  * Simple security manager
  * For development purposes, implements just authentication
  */
-class Manager extends AbstractManager
+class Simple extends AbstractManager
 {
     /**
      * Credentials for successful authentication
@@ -122,20 +122,18 @@ class Manager extends AbstractManager
     }
 
     /**
-     * @param string $domain
-     * @param stdClass $user
+     * @param Principal\UserInterface $user
      */
-    function addUser($domain, $user)
+    public function addUser(Principal\UserInterface $user)
     {
         // TODO: Implement addUser() method.
         throw new \Exception(sprintf('%s not implemented!', __METHOD__));
     }
 
     /**
-     * @param string $domain
-     * @param stdClass $user
+     * @param Principal\UserInterface $user
      */
-    function updateUser($domain, $user)
+    public function updateUser(Principal\UserInterface $user)
     {
         // TODO: Implement updateUser() method.
         throw new \Exception(sprintf('%s not implemented!', __METHOD__));
@@ -162,10 +160,10 @@ class Manager extends AbstractManager
     }
 
     /**
-     * @param string $domain
-     * @param string $groupname
+     * Adds a security group
+     * @param \Vivo\Security\Principal\GroupInterface $group
      */
-    function addGroup($domain, $groupname)
+    public function addGroup(Principal\GroupInterface $group)
     {
         // TODO: Implement addGroup() method.
         throw new \Exception(sprintf('%s not implemented!', __METHOD__));
@@ -250,13 +248,28 @@ class Manager extends AbstractManager
             && strtolower($username) == strtolower($this->options['username'])
             && $password == $this->options['password']) {
             //Authentication ok
-            $user           = new stdClass();
-            $user->username = $this->options['username'];
+            $user           = new Principal\User();
+            $user->setDomain($this->options['security_domain']);
+            $user->setUsername($this->options['username']);
+            $user->setPasswordHash(md5($this->options['password']));
+            $user->setActive(true);
         } else {
             //Authentication failed
             $user           = null;
         }
         $this->setUserPrincipal($user);
         return $user;
+    }
+
+    /**
+     * Returns if the user is actually defined as a member of the specified group
+     * @param string $domain
+     * @param string $username
+     * @param string $groupName
+     * @return bool
+     */
+    protected function isUserInGroupReal($domain, $username, $groupName)
+    {
+        // TODO: Implement isUserInGroupReal() method.
     }
 }

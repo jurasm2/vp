@@ -83,6 +83,7 @@ return array(
             'indexer_document_builder'  => 'Vivo\Indexer\DocumentBuilder',
             'view_model'                => 'Zend\View\Model\ViewModel',
             'session_manager'           => 'Zend\Session\SessionManager',
+            'Vivo\Http\Filter\OutputFilterListener' => 'Vivo\Http\Filter\OutputFilterListener',
         ),
         'factories' => array(
             'translator'                => 'Zend\I18n\Translator\TranslatorServiceFactory',
@@ -107,6 +108,7 @@ return array(
             'cms_api_module'            => 'Vivo\Service\CmsApiModuleFactory',
             'cms_api_repository'        => 'Vivo\Service\CmsApiRepositoryFactory',
             'db_provider_factory'       => 'Vivo\Service\DbProviderFactoryFactory',
+            'db_provider_core'          => 'Vivo\Service\DbProviderCoreFactory',
             'pdo_abstract_factory'      => 'Vivo\Service\PdoAbstractFactoryFactory',
             'zdb_abstract_factory'      => 'Vivo\Service\ZdbAbstractFactoryFactory',
             'path_builder'              => 'Vivo\Service\PathBuilderFactory',
@@ -124,6 +126,8 @@ return array(
             'template_resolver'         => 'Vivo\Service\TemplateResolverFactory',
             'di_proxy'                  => 'Vivo\Service\DiProxyFactory',
             'module_db_provider'        => 'Vivo\Service\ModuleDbProviderFactory',
+            'db_table_name_provider'    => 'Vivo\Service\DbTableNameProviderFactory',
+            'db_table_gateway_provider' => 'Vivo\Service\DbTableGatewayProviderFactory',
         ),
         'aliases' => array(
             'Vivo\SiteManager\Event\SiteEvent'  => 'site_event',
@@ -165,6 +169,7 @@ return array(
             'cli_repository'            => 'Vivo\Service\Controller\CLI\CLIRepositoryControllerFactory',
             'cli_cms'                   => 'Vivo\Service\Controller\CLI\CLICmsControllerFactory',
             'cli_indexer'               => 'Vivo\Service\Controller\CLI\CLIIndexerControllerFactory',
+            'cli_setup'                 => 'Vivo\Service\Controller\CLI\CLISetupControllerFactory',
         ),
     ),
     'view_manager' => array(
@@ -243,6 +248,15 @@ return array(
             ),
         ),
     ),
+    //Core setup
+    'setup'         => array(
+        'db'    => array(
+            //Mapping of symbolic core table names to real names used in db
+            'table_names'   => array(
+                'vivo_users'     => 'vivo_users',
+            ),
+        ),
+    ),
     'indexer'   => array(
         'adapter'   => array(
             'type'      => 'dummy',
@@ -264,15 +278,6 @@ return array(
             'multi'         => false,
         ),
         'presets'                   => array(
-        ),
-    ),
-    'security_manager'  => array(
-        //Options for Vivo\CMS\Security\Simple\Manager
-        'options'           => array(
-            //Security domain - if not set, the security domain of the active site will be used
-//                'security_domain'   => 'my.security.domain',
-            'username'          => 'vivo.user',
-            'password'          => 'password',
         ),
     ),
     //Vivo Modules configuration
@@ -471,6 +476,25 @@ return array(
                         ),
                     ),
                 ),
+                'setup' => array(
+                    'options' => array(
+                        'route'    => 'setup [<action>]',
+                        'defaults' => array(
+                            'controller' => 'cli_setup',
+                            'action'     => 'default',
+                        ),
+                    ),
+                ),
+                'setup_db' => array(
+                    'options' => array(
+                        'route'    => 'setup db [--force|-f]',
+                        'defaults' => array(
+                            'controller' => 'cli_setup',
+                            'action'     => 'db',
+                        ),
+                    ),
+                ),
+
             ),
         ),
     ),

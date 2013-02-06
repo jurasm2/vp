@@ -1,6 +1,7 @@
 <?php
 namespace Vivo;
 
+use Vivo\Http\Filter\OutputFilterListener;
 use Vivo\View\Helper as ViewHelper;
 use Vivo\Service\Exception;
 
@@ -42,6 +43,9 @@ class Module implements ConsoleBannerProviderInterface, ConsoleUsageProviderInte
 
         $eventManager->attach(MvcEvent::EVENT_ROUTE, array ($this, 'registerTemplateResolver'));
         $eventManager->attach(MvcEvent::EVENT_ROUTE, array ($this, 'registerViewHelpers'));
+
+        $filterListener = $sm->get('Vivo\Http\Filter\OutputFilterListener');
+        $filterListener->attach($eventManager);
     }
 
     public function getConfig()
@@ -109,6 +113,7 @@ class Module implements ConsoleBannerProviderInterface, ConsoleUsageProviderInte
                 array ('module', 'Manage modules.'),
                 array ('repository', 'Administer the repository.'),
                 array ('cms', 'CMS functions.'),
+                array ('setup', 'System setup'),
         );
     }
 }

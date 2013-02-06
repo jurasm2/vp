@@ -1,0 +1,33 @@
+<?php
+$param = $viewAll ? '-all' : '';
+?>
+<div id="tabContainer<?=$param?>">
+    <div id="tabs<?=$param?>">
+        <div class="tabsHolder<?=$param?>">
+            <ul class="tabs">
+                <?
+                $position = 0;
+                foreach ($tabs as $tab):
+                    $position++;
+                ?>
+                <li<?if (!$viewAll && $tab['name'] == $selected):?> class="selected"<?endif?> rel="tab<?=$position?>">
+                    <a href="<?=$this->actionUrl('select', array($tab['name']))?>"><?=htmlspecialchars($tab['label'])?></a>
+                </li>
+               <?endforeach?>
+            </ul>
+            <div class="clear"></div>
+        </div>
+    </div>
+    <div class="clear"></div>
+    <div class="tabContent">
+        <?
+        if (!empty($components))
+        if ($viewAll) {
+            foreach ($components as $name)
+                echo ${$name};
+        } else {
+            echo ${$selected};
+        }?>
+    </div>
+</div>
+<div class="clear"></div>

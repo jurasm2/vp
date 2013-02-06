@@ -1,0 +1,7 @@
+<?
+$label = /*Vivo\Util\Messages::get($this->getLabel())*/"({$name})";
+?>
+<a rel="table" href="<?=$this->action('click')?>"<?if (!$enabled):?> class="disabled"<?endif?> title="<?=$label?>">
+    <img src="/system/Images/icons/<?=$icon.'/16x16/'.$name.'.png'?><?if (!$enabled):?>?bw=1<?endif?>" title="<?=$label?>" alt="<?=$label?>" />
+    <span><?=$label?></span>
+</a>

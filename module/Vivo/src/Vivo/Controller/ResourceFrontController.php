@@ -80,7 +80,7 @@ class ResourceFrontController implements DispatchableInterface,
                     ->addHeaderLine(
                             'Content-Disposition: inline; filename="' . $filename . '"');
 
-            $response->setStream($resourceStream);
+            $response->setInputStream($resourceStream);
         } catch (\Exception $e) {
             if ($e instanceof IOException ||
                     $e instanceof ModuleResourceNotFoundException ||
@@ -91,7 +91,6 @@ class ResourceFrontController implements DispatchableInterface,
                 throw $e;
             }
         }
-
         return $response;
     }
 

@@ -82,7 +82,10 @@ class MetadataManager
         foreach ($parents as $class) {
             // Vivo CMS model, other is a module model
             if(strpos($class, 'Vivo\\') === 0) {
-                $path = realpath(sprintf('%s/%s.ini', $this->options['config_path'], $class));
+                $path = realpath(sprintf('%s/%s.ini',
+                    $this->options['config_path'],
+                    str_replace('\\', DIRECTORY_SEPARATOR, $class))
+                );
 
                 if($path) {
                     $resource = file_get_contents($path);
@@ -107,11 +110,15 @@ class MetadataManager
             }
         }
 
-        $config = $config->toArray();
+        $descriptors = $config->toArray();
 
-        $this->cache['rawmeta'][$entityClass] = $config;
+        uasort($descriptors, function($a, $b) {
+            return (isset($a['order']) ? intval($a['order']) : 0) > (isset($b['order']) ? intval($b['order']) : 0);
+        });
 
-        return $config;
+        $this->cache['rawmeta'][$entityClass] = $descriptors;
+
+        return $descriptors;
     }
 
     /**
@@ -136,7 +143,7 @@ class MetadataManager
      *
      * @param string $entityClass
      * @param array $config
-     * @throws \Exception
+     * @throws Exception\DescriptiorException
      */
     private function applyProvider($entityClass, &$config) {
         foreach ($config as $key => &$value) {
@@ -146,13 +153,13 @@ class MetadataManager
             elseif (strpos($value, '\\')) {
                 if(class_exists($value) && is_subclass_of($value, 'Vivo\Metadata\MetadataValueProviderInterface')) {
                     /** @var $provider MetadataValueProviderInterface */
-                    $provider   = new $value($this->serviceManager);
-                    $value      = $provider->getValue($entityClass);
+                    $provider = new $value($this->serviceManager);
+                    $value    = $provider->getValue($entityClass);
                 }
                 else {
                     throw new Exception\DescriptiorException(
                         sprintf('Metadata value provider \'%s\' defined in metadata %s::%s is not an instance of '
-                                . 'Vivo\Metadata\MetadataValueProviderInterface', $value, get_class($entityClass), $key)
+                            .'Vivo\Metadata\MetadataValueProviderInterface', $value, get_class($entityClass), $key)
                     );
                 }
             }
