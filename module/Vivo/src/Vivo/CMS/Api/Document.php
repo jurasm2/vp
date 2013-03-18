@@ -1,14 +1,13 @@
 <?php
 namespace Vivo\CMS\Api;
 
-use Vivo\CMS\Model;
 use Vivo\Repository\RepositoryInterface;
 use Vivo\Repository\Exception\EntityNotFoundException;
 use Vivo\Storage\PathBuilder\PathBuilderInterface;
-use Vivo\CMS\Exception;
 use Vivo\Uuid\GeneratorInterface as UuidGeneratorInterface;
-use Vivo\CMS\Model\Content\Hyperlink;
-use Vivo\CMS\Model\ContentContainer;
+use Vivo\CMS\Exception as CMSException;
+use Vivo\CMS\Model;
+use Vivo\CMS\Model\Content;
 use DateTime;
 
 /**
@@ -110,7 +109,7 @@ class Document implements DocumentInterface
      * Finds published content in ContentContainer,
      * @param Model\ContentContainer $container
      * @return Model\Content|boolean
-     * @throws Exception\LogicException when there is more than one published content
+     * @throws \Vivo\CMS\Exception\LogicException when there is more than one published content
      */
     public function getPublishedContent(Model\ContentContainer $container)
     {
@@ -127,14 +126,14 @@ class Document implements DocumentInterface
         } elseif (count($result) == 0) {
             return false;
         } else {
-            throw new Exception\LogicException(
+            throw new CMSException\LogicException(
                 sprintf("%s: The ContentContainer '%s' contains more than one published content",
                     __METHOD__, $container->getPath()));
         }
     }
 
     /**
-     * @param Model\Content $content
+     * @param \Vivo\CMS\Model\Content $content
      */
     public function publishContent(Model\Content $content)
     {
@@ -167,7 +166,7 @@ class Document implements DocumentInterface
 
     /**
      * Sets a workflow state to the content
-     * @param Model\Content $content
+     * @param \Vivo\CMS\Model\Content $content
      * @param string $state
      * @throws \Vivo\CMS\Exception\InvalidArgumentException
      */
@@ -175,7 +174,7 @@ class Document implements DocumentInterface
     {
         $states = array_keys($this->getWorkflowStates());
         if (!in_array($state, $states)) {
-            throw new Exception\InvalidArgumentException(
+            throw new CMSException\InvalidArgumentException(
                 sprintf("%s: Unknown state '%s', available: %s", __METHOD__, $state, implode(', ', $states)));
         }
         //TODO: authorization
@@ -192,8 +191,8 @@ class Document implements DocumentInterface
 
     /**
      * Returns document for the given content
-     * @param Model\Content $content
-     * @return Model\Document
+     * @param \Vivo\CMS\Model\Content $content
+     * @return \Vivo\CMS\Model\Document
      */
     public function getContentDocument(Model\Content $content)
     {
@@ -222,38 +221,6 @@ class Document implements DocumentInterface
 
     /**
      * @param Model\Document $document
-     * @param int $index
-     * @param int $version
-     * @throws \Vivo\CMS\Exception\InvalidArgumentException
-     * @return Model\Content
-     */
-    public function getDocumentContent(Model\Document $document, $index, $version/*, $state {PUBLISHED}*/)
-    {
-        if (!is_integer($version)) {
-            throw new Exception\InvalidArgumentException(
-                sprintf(
-                    'Argument %d passed to %s must be an type of %s, %s given',
-                    2, __METHOD__, 'integer', gettype($version)));
-        }
-        if (!is_integer($index)) {
-            throw new Exception\InvalidArgumentException(
-                sprintf(
-                    'Argument %d passed to %s must be an type of %s, %s given',
-                    3, __METHOD__, 'integer', gettype($index)));
-        }
-        $components = array(
-            $document->getPath(),
-            'Contents.',
-            $index,
-            $version,
-        );
-        $path   = $this->pathBuilder->buildStoragePath($components, true);
-        $entity = $this->repository->getEntity($path);
-        return $entity;
-    }
-
-    /**
-     * @param Model\Document $document
      * @return Model\ContentContainer[]
      */
     public function getContentContainers(Model\Document $document)
@@ -276,7 +243,7 @@ class Document implements DocumentInterface
     public function getDocumentContents(Model\Document $document, $index/*, $state {PUBLISHED}*/)
     {
         if (!is_integer($index)) {
-            throw new Exception\InvalidArgumentException(
+            throw new CMSException\InvalidArgumentException(
                 sprintf(
                     'Argument %d passed to %s must be an type of integer, %s given',
                     2, __METHOD__, gettype($index)));
@@ -289,11 +256,18 @@ class Document implements DocumentInterface
     /**
      * @param Model\Document $parent
      * @param Model\Document $document
+     * @throws \Vivo\CMS\Api\Exception\InvalidTitleException
      * @return \Vivo\CMS\Model\Document
      */
     public function createDocument(Model\Document $parent, Model\Document $document)
     {
-        $titleLc    = mb_strtolower($document->getTitle());
+        $title = trim($document->getTitle());
+        if($title == '') {
+            throw new \Vivo\CMS\Api\Exception\InvalidTitleException('Document title is not set');
+        }
+        $document->setTitle($title);
+
+        $titleLc = mb_strtolower($document->getTitle());
         $path = $this->pathBuilder->buildStoragePath(array($parent->getPath(), $titleLc));
 
         $document->setPath($path);
@@ -320,7 +294,7 @@ class Document implements DocumentInterface
     }
 
     /**
-     * @param Model\Document $document
+     * @param \Vivo\CMS\Model\Document $document
      * @return \Vivo\CMS\Model\ContentContainer
      */
     public function createContentContainer(Model\Document $document)
@@ -408,9 +382,7 @@ class Document implements DocumentInterface
         $contentVersions = $this->getContentVersions($container);
 
         foreach ($contentVersions as $version) { /* @var $version \Vivo\CMS\Model\Content */
-            if($version->getUuid() !== $content->getUuid()
-            && $version->getState() == 'PUBLISHED')
-            {
+            if($version->getUuid() !== $content->getUuid() && $version->getState() == 'PUBLISHED') {
                 $version->setState('ARCHIVED');
 
                 $this->cmsApi->saveEntity($version, false);
@@ -486,19 +458,21 @@ class Document implements DocumentInterface
         $targetUrl  = $targetUrl . ((substr($targetUrl, -1) == '/') ? '' : '/');
         if (!$this->cmsApi->getSiteEntity($targetUrl, $site)) {
             //The location to move to does not exist
-            throw new Exception\Exception(sprintf("%s: Target location '%s' does not exist", __METHOD__, $targetUrl));
+            throw new CMSException\Exception(
+                sprintf("%s: Target location '%s' does not exist", __METHOD__, $targetUrl));
         }
         $targetUrl  .= $targetName . '/';
         $targetPath = $this->cmsApi->getEntityAbsolutePath($targetUrl, $site);
         if ($this->repository->hasEntity($targetPath)) {
             //There is an entity at the target path already
-            throw new Exception\Exception(sprintf("%s: There is an entity at the target path '%s'", __METHOD__, $targetPath));
+            throw new Exception\EntityAlreadyExistsException(
+                sprintf("%s: There is an entity at the target path '%s'", __METHOD__, $targetPath));
         }
         /** @var $moved \Vivo\CMS\Model\Document */
         $docClone   = clone $document;
         $moved  = $this->repository->moveEntity($document, $targetPath);
         if (!$moved) {
-            throw new Exception\Exception(
+            throw new CMSException\Exception(
                 sprintf("%s: Move from '%s' to '%s' failed", __METHOD__, $document->getPath(), $targetPath));
         }
         $moved->setTitle($title);
@@ -518,7 +492,7 @@ class Document implements DocumentInterface
             $contentContainer   = $this->createContentContainer($docClone);
             $this->cmsApi->saveEntity($contentContainer);
             //Content - hyperlink
-            $hyperlink  = new Hyperlink();
+            $hyperlink  = new Content\Hyperlink();
             $hyperlink->setUuid($this->uuidGenerator->create());
             $hyperlink->setUrl($this->cmsApi->getEntityRelPath($moved));
             $hyperlink->setState('PUBLISHED');
@@ -550,18 +524,20 @@ class Document implements DocumentInterface
         $targetUrl  = $targetUrl . ((substr($targetUrl, -1) == '/') ? '' : '/');
         if (!$this->cmsApi->getSiteEntity($targetUrl, $site)) {
             //The location to copy to does not exist
-            throw new Exception\Exception(sprintf("%s: Target location '%s' does not exist", __METHOD__, $targetUrl));
+            throw new CMSException\Exception(
+                sprintf("%s: Target location '%s' does not exist", __METHOD__, $targetUrl));
         }
         $targetUrl  .= $targetName . '/';
         $targetPath = $this->cmsApi->getEntityAbsolutePath($targetUrl, $site);
         if ($this->repository->hasEntity($targetPath)) {
             //There is an entity at the target path already
-            throw new Exception\Exception(sprintf("%s: There is an entity at the target path '%s'", __METHOD__, $targetPath));
+            throw new CMSException\Exception(
+                sprintf("%s: There is an entity at the target path '%s'", __METHOD__, $targetPath));
         }
         /** @var $copied \Vivo\CMS\Model\Document */
         $copied = $this->repository->copyEntity($document, $targetPath);
         if (!$copied) {
-            throw new Exception\Exception(
+            throw new CMSException\Exception(
                 sprintf("%s: Copying from '%s' to '%s' failed", __METHOD__, $document->getPath(), $targetPath));
         }
         $copied->setTitle($title);
@@ -636,10 +612,14 @@ class Document implements DocumentInterface
         return $allVersions;
     }
 
+    /**
+     * @param \Vivo\CMS\Model\Folder $folder
+     * @return \Vivo\CMS\Model\Folder
+     */
     public function getParentDocument(Model\Folder $folder)
     {
         $parent = $this->cmsApi->getParent($folder);
-        return ($parent instanceof Model\Folder)? $parent : null;
+        return ($parent instanceof Model\Folder) ? $parent : null;
     }
 
     /**

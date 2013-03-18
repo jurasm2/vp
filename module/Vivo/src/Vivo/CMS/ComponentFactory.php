@@ -8,6 +8,7 @@ use Vivo\CMS\Model\Content;
 use Vivo\CMS\Model\Document;
 use Vivo\CMS\Model\Site;
 use Vivo\CMS\UI\InjectModelInterface;
+use Vivo\CMS\UI\InjectRequestedDocumentInterface;
 use Vivo\CMS\UI\Content\Layout;
 use Vivo\CMS\UI\Content\RawComponentInterface;
 use Vivo\UI\ComponentInterface;
@@ -59,7 +60,7 @@ class ComponentFactory implements EventManagerAwareInterface
      * Constructor
      * @param \Zend\ServiceManager\ServiceManager $sm
      * @param \Zend\Di\Di $di
-     * @param Api\CMS $cms
+     * @param Api\CMS $cmsApi
      * @param Api\Document $documentApi
      * @param Model\Site $site
      */
@@ -81,7 +82,7 @@ class ComponentFactory implements EventManagerAwareInterface
     public function getRootComponent(Document $document)
     {
         $root = $this->createComponent('Vivo\CMS\UI\Root');
-        $component = $this->getFrontComponent($document);
+        $component = $this->getFrontComponent($document, $document);
         if ($component instanceof RawComponentInterface) {
             $root->setMain($component);
         } else {
@@ -96,10 +97,12 @@ class ComponentFactory implements EventManagerAwareInterface
      * Returns front component for the given document.
      *
      * @param Document $document
+     * @param Model\Document $requestedDocument
      * @param array $parameters (Disable Layout)
+     * @throws Exception
      * @return \Vivo\UI\Component
      */
-    public function getFrontComponent(Document $document, $parameters = array())
+    public function getFrontComponent(Document $document, Document $requestedDocument, $parameters = array())
     {
         $contents = $this->documentApi->getPublishedContents($document);
 
@@ -108,13 +111,13 @@ class ComponentFactory implements EventManagerAwareInterface
                     ->createComponent('Vivo\UI\ComponentContainer');
             $i = 1;
             foreach ($contents as $content) {
-                $cc = $this->getContentFrontComponent($content, $document);
+                $cc = $this->getContentFrontComponent($content, $document, $requestedDocument);
                 $frontComponent->addComponent($cc, 'content' . $i++);
             }
 
         } elseif (count($contents) === 1) {
             $frontComponent = $this
-                    ->getContentFrontComponent(reset($contents), $document);
+                    ->getContentFrontComponent(reset($contents), $document, $requestedDocument);
         } else {
             throw new Exception(
                     sprintf("%s: Document '%s' hasn't any published content.",
@@ -130,7 +133,7 @@ class ComponentFactory implements EventManagerAwareInterface
                 $layout = $this->cmsApi->getSiteEntity($layoutPath, $this->site);
                 $panels = $this->getDocumentLayoutPanels($document);
                 $frontComponent = $this
-                        ->applyLayout($layout, $frontComponent, $panels);
+                        ->applyLayout($layout, $frontComponent, $panels, $requestedDocument);
             }
         }
 
@@ -141,19 +144,25 @@ class ComponentFactory implements EventManagerAwareInterface
      * Wraps the UI component to Layout.
      *
      * @param Document $layout
-     * @param Component $component
+     * @param ComponentInterface $component
+     * @param array $panels
+     * @param Model\Document $requestedDocument
+     * @throws LogicException
      * @return \Vivo\UI\Component
      */
-    protected function applyLayout(Document $layout, ComponentInterface $component,
-            $panels = array())
+    protected function applyLayout(Document $layout,
+                                   ComponentInterface $component,
+                                   $panels = array(),
+                                   Document $requestedDocument)
     {
-        $layoutComponent = $this->getFrontComponent($layout);
+        $layoutComponent = $this->getFrontComponent($layout, $requestedDocument);
 
         if (!$layoutComponent instanceof Layout) {
             //this is usualy caused when the document hasn't layout content or has more then one content
             throw new LogicException(
                     sprintf(
-                            "%s: Front component for layout must be instance of 'Vivo\CMS\UI\Content\Layout', '%s' given.",
+                            "%s: Front component for layout must be instance of 'Vivo\\CMS\\UI\\Content\\Layout', "
+                            . "'%s' given",
                             __METHOD__, get_class($layoutComponent)));
         }
 
@@ -183,7 +192,7 @@ class ComponentFactory implements EventManagerAwareInterface
 
             } else {
                 $panelDocument = $this->cmsApi->getSiteEntity($path, $this->site);
-                $panelComponent = $this->getFrontComponent($panelDocument);
+                $panelComponent = $this->getFrontComponent($panelDocument, $requestedDocument);
             }
             $layoutComponent->addComponent($panelComponent, $name);
         }
@@ -194,7 +203,7 @@ class ComponentFactory implements EventManagerAwareInterface
         if ($parentLayout = $this->cmsApi->getParent($layout)) {
             if ($parentLayout instanceof Document) {
                 if ($component = $this
-                        ->applyLayout($parentLayout, $layoutComponent, $panels)) {
+                        ->applyLayout($parentLayout, $layoutComponent, $panels, $requestedDocument)) {
                     $layoutComponent = $component;
                 }
             }
@@ -223,16 +232,15 @@ class ComponentFactory implements EventManagerAwareInterface
      *
      * @param Content $content
      * @param Document $document
+     * @param Document $requestedDocument
      * @return \Vivo\UI\Component
      */
-    public function getContentFrontComponent(Content $content,
-            Document $document)
+    public function getContentFrontComponent(Content $content, Document $document, Document $requestedDocument)
     {
         if ($content instanceof \Vivo\CMS\Model\Content\Link) {
             $linkedDocument = $this->cmsApi->getSiteEntity($content->getRelPath(), $this->site);
             return $this
-                    ->getFrontComponent($linkedDocument,
-                            array('noLayout' => true));
+                    ->getFrontComponent($linkedDocument, $linkedDocument, array('noLayout' => true));
         }
 
         $className = $this->resolver->resolve($content);
@@ -242,6 +250,10 @@ class ComponentFactory implements EventManagerAwareInterface
             //TODO how to properly inject document and content
             $component->setContent($content);
             $component->setDocument($document);
+        }
+        /** @var $component InjectRequestedDocumentInterface */
+        if ($component instanceof InjectRequestedDocumentInterface) {
+            $component->setRequestedDocument($requestedDocument);
         }
         if ($content instanceof Content\ProvideTemplateInterface) {
             if (\Vivo\Metadata\Provider\SelectableTemplatesProvider::DEFAULT_TEMPLATE != $content->getTemplate()){

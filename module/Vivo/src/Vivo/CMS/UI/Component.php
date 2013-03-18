@@ -8,18 +8,23 @@ use Vivo\UI\ComponentContainer;
 /**
  * Base component for CMS UI components.
  */
-class Component extends ComponentContainer implements InjectModelInterface
+class Component extends ComponentContainer implements InjectModelInterface, InjectRequestedDocumentInterface
 {
 
     /**
-     * @var \Vivo\CMS\Model\Document
+     * @var Document
      */
     protected $document;
 
     /**
-     * @var \Vivo\CMS\Model\Content
+     * @var Content
      */
     protected $content;
+
+    /**
+     * @var Document
+     */
+    protected $requestedDocument;
 
     /**
      * @param Document $document
@@ -37,9 +42,20 @@ class Component extends ComponentContainer implements InjectModelInterface
         $this->content = $content;
     }
 
-     public function view() {
-         $this->view->content = $this->content;
-         $this->view->document = $this->document;
+    /**
+     * Sets requested document
+     * @param Document $document
+     * @return void
+     */
+    public function setRequestedDocument(Document $document)
+    {
+        $this->requestedDocument    = $document;
+    }
+
+    public function view() {
+         $this->view->content           = $this->content;
+         $this->view->document          = $this->document;
+         $this->view->requestedDocument = $this->requestedDocument;
          return parent::view();
-     }
+    }
 }

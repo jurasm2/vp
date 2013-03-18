@@ -1,22 +1,16 @@
-Creator<hr>
 <?php
-$formType       = \DluTwBootstrap\Form\FormUtil::FORM_TYPE_HORIZONTAL;
+$formType = DluTwBootstrap\Form\FormUtil::FORM_TYPE_HORIZONTAL;
 echo $this->formTwb()->openTag($form, $formType);
 $type = $form->get('__type')
     ->setAttribute('style', 'width:100%')
     ->setAttribute('onchange',
         sprintf('this.form.act.value = "%s"; this.form.submit();', $this->action('create')));
 echo $this->formRowTwb($type, $formType);
-?>
-<hr>
-<?php
+
 echo $this->formFieldsetTwb($form->get('entity'), $formType);
 echo $contentTab;
-?>
-<hr>
-<?php
+
 echo $this->formRowTwb($form->get('act'), $formType);
 echo $this->formRowTwb($form->get('csrf'), $formType);
 echo $this->formFieldsetTwb($form->get('buttons'));
 echo $this->formTwb()->closeTag();
-?>

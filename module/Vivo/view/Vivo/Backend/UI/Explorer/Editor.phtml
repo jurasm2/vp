@@ -1,5 +1,5 @@
 <?php
-    $formType       = \DluTwBootstrap\Form\FormUtil::FORM_TYPE_HORIZONTAL;
+    $formType = DluTwBootstrap\Form\FormUtil::FORM_TYPE_HORIZONTAL;
     //Display options
     $displayOptions = array(
         'fieldsets' => array(
@@ -19,15 +19,13 @@
     $doEntity = $displayOptions['fieldsets']['entity'];
     echo $this->formFieldsetTwb($fsEntity, $formType, $doEntity);
     echo $contentTab;
-?>
-<hr>
-<?php
+
     echo $this->formRowTwb($form->get('act'), $formType);
     echo $this->formRowTwb($form->get('csrf'), $formType);
     echo $this->formFieldsetTwb($form->get('buttons'), $formType);
     echo $this->formTwb()->closeTag();
 ?>
-Resource editor<hr>
+<hr>Resource editor
 <?
     echo $resourceEditor;
 ?>

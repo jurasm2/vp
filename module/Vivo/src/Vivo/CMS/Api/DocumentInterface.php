@@ -67,15 +67,6 @@ interface DocumentInterface
 
     /**
      * @param Model\Document $document
-     * @param int $index
-     * @param int $version
-     * @throws \Vivo\CMS\Exception\InvalidArgumentException
-     * @return Model\Content
-     */
-    public function getDocumentContent(Model\Document $document, $index, $version/*, $state {PUBLISHED}*/);
-
-    /**
-     * @param Model\Document $document
      * @return array <\Vivo\CMS\Model\ContentContainer>
      */
     public function getContentContainers(Model\Document $document);

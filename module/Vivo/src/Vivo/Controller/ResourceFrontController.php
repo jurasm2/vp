@@ -1,22 +1,22 @@
 <?php
 namespace Vivo\Controller;
 
-use Vivo\CMS\Api\CMS;
+use Vivo\CMS\Api;
 use Vivo\CMS\Model\Content\File;
-use Vivo\Controller\Exception;
+use Vivo\Http\HeaderHelper;
 use Vivo\IO\Exception\ExceptionInterface as IOException;
 use Vivo\IO\FileInputStream;
-use Vivo\Module\ResourceManager\ResourceManager;
 use Vivo\Module\Exception\ResourceNotFoundException as ModuleResourceNotFoundException;
+use Vivo\Module\ResourceManager\ResourceManager;
 use Vivo\SiteManager\Event\SiteEvent;
 use Vivo\Util;
 
+use Zend\EventManager\EventInterface as Event;
+use Zend\Http\Response as HttpResponse;
 use Zend\Mvc\InjectApplicationEventInterface;
 use Zend\Stdlib\DispatchableInterface;
-use Zend\EventManager\EventInterface as Event;
 use Zend\Stdlib\RequestInterface as Request;
 use Zend\Stdlib\ResponseInterface as Response;
-use Zend\Http\Response as HttpResponse;
 
 /**
  * Controller for giving all resource files
@@ -26,9 +26,9 @@ class ResourceFrontController implements DispatchableInterface,
 {
 
     /**
-     * @var CMS
+     * @var Api\CMS
      */
-    protected $cms;
+    protected $cmsApi;
 
     /**
      * @var Event
@@ -41,7 +41,6 @@ class ResourceFrontController implements DispatchableInterface,
     protected $resourceManager;
 
     /**
-     *
      * @var SiteEvent
      */
     protected $siteEvent;
@@ -52,39 +51,39 @@ class ResourceFrontController implements DispatchableInterface,
         $source = $this->event->getRouteMatch()->getParam('source');
         try {
             if ($source === 'Vivo') {
-                //it's vivo core resource - the core resources should be moved into own module
-                    $resourceStream = new FileInputStream(
-                            __DIR__ . '/../../../resource/' . $pathToResource);
+                //it's vivo core resource
+                    $resourceStream = new FileInputStream(__DIR__ . '/../../../resource/' . $pathToResource);
             } elseif ($source === 'entity') {
                 //it's entity resource
                 $entityPath = $this->event->getRouteMatch()->getParam('entity');
-                $entity = $this->cms->getSiteEntity($entityPath, $this->siteEvent->getSite());
+                $entity = $this->cmsApi->getSiteEntity($entityPath, $this->siteEvent->getSite());
 
                 if ($entity instanceof File) {
                     //TODO match interface instead of the concrete class File
                     $filename = $entity->getFilename();
                 }
 
-                $resourceStream = $this->cms->readResource($entity, $pathToResource);
+                $resourceStream = $this->cmsApi->readResource($entity, $pathToResource);
             } else {
                 //it's module resource
-                $resourceStream = $this->resourceManager
-                        ->readResource($source, $pathToResource);
+                $resourceStream = $this->resourceManager->readResource($source, $pathToResource);
             }
             if (!isset($filename)) {
                 $filename   = pathinfo($pathToResource, PATHINFO_BASENAME);
             }
             $ext = pathinfo($filename, PATHINFO_EXTENSION);
             $mimeType = Util\MIME::getType($ext);
-            $response->getHeaders()->addHeaderLine('Content-Type: ' . $mimeType)
-                    ->addHeaderLine(
-                            'Content-Disposition: inline; filename="' . $filename . '"');
+
+            //set headers
+            $headers = $response->getHeaders();
+            $headers->addHeaderLine('Content-Type: ' . $mimeType);
+            $headers->addHeaderLine('Content-Disposition: inline; filename="' . $filename . '"');
+            $this->headerHelper->setExpirationByMimeType($headers, $mimeType);
 
             $response->setInputStream($resourceStream);
         } catch (\Exception $e) {
             if ($e instanceof IOException ||
                     $e instanceof ModuleResourceNotFoundException ||
-                    $e instanceof IOException ||
                     $e instanceof CMSResourceNotFoundException) {
                 $response->setStatusCode(HttpResponse::STATUS_CODE_404);
             } else {
@@ -95,10 +94,10 @@ class ResourceFrontController implements DispatchableInterface,
     }
 
     /**
-     * @param CMS $cms
+     * @param Api\CMS $cms
      */
-    public function setCMS(CMS $cms) {
-        $this->cms = $cms;
+    public function setCMS(Api\CMS $cmsApi) {
+        $this->cmsApi = $cmsApi;
     }
 
     /* (non-PHPdoc)
@@ -126,10 +125,18 @@ class ResourceFrontController implements DispatchableInterface,
     }
 
     /**
-     * @param Site $site
+     * @param SiteEvent $sitEevent
      */
     public function setSiteEvent(SiteEvent $siteEvent)
     {
         $this->siteEvent = $siteEvent;
+    }
+
+    /**
+     * @param HeaderHelper $headerHelper
+     */
+    public function setHeaderHelper(HeaderHelper $headerHelper)
+    {
+        $this->headerHelper = $headerHelper;
     }
 }

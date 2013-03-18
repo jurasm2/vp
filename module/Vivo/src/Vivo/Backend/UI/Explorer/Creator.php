@@ -64,10 +64,15 @@ class Creator extends Editor
 
             $this->explorer->setEntity($this->entity);
 
-            $this->saveContents();
+            $this->saveProcess();
 
             $this->explorer->setCurrent('editor');
             $this->events->trigger(new RedirectEvent());
+
+            $this->addAlertMessage('Created...', Alert::TYPE_SUCCESS);
+        }
+        else {
+            $this->addAlertMessage('Error...', Alert::TYPE_ERROR);
         }
     }
 }

@@ -94,14 +94,6 @@ class Editor extends AbstractForm implements TranslatorAwareInterface
         $this->availableContentsProvider = $availableContentsProvider;
     }
 
-    /**
-     * @param Alert $alert
-     */
-    public function setAlert(Alert $alert)
-    {
-        $this->alert = $alert;
-    }
-
     public function init()
     {
         $this->entity = $this->getParent()->getEntity();
@@ -141,6 +133,14 @@ class Editor extends AbstractForm implements TranslatorAwareInterface
     }
 
     /**
+     * @param Alert $alert
+     */
+    public function setAlert(Alert $alert)
+    {
+        $this->alert = $alert;
+    }
+
+    /**
      * @param \Vivo\UI\TabContainer $tab
      */
     public function setTabContainer(\Vivo\UI\TabContainer $tab)
@@ -154,6 +154,15 @@ class Editor extends AbstractForm implements TranslatorAwareInterface
     public function setResourceEditor(Editor\Resource $editor)
     {
         $this->addComponent($editor, 'resourceEditor');
+    }
+
+    /**
+     * Injects translator
+     * @param \Zend\I18n\Translator\Translator $translator
+     */
+    public function setTranslator(Translator $translator)
+    {
+        $this->translator = $translator;
     }
 
     protected function doGetForm()
@@ -209,6 +218,17 @@ class Editor extends AbstractForm implements TranslatorAwareInterface
     }
 
     /**
+     * @param string $message
+     * @param string $type
+     */
+    protected function addAlertMessage($message, $type)
+    {
+        if($this->alert) {
+            $this->alert->addMessage($message, $type);
+        }
+    }
+
+    /**
      * Save action.
      * @throws \Exception
      */
@@ -233,19 +253,34 @@ class Editor extends AbstractForm implements TranslatorAwareInterface
         }
     }
 
-    protected function saveContents()
+    /**
+     * @return boolean
+     */
+    private function saveContents()
+    {
+        $success = $this->saveProcess();
+
+        if($success) {
+            $this->addAlertMessage('Saved...', Alert::TYPE_SUCCESS);
+        }
+        else {
+            $this->addAlertMessage('Error...', Alert::TYPE_ERROR);
+        }
+
+        return $success;
+    }
+
+    /**
+     * @return boolean
+     */
+    protected function saveProcess()
     {
         $success = true;
 
         /* @var $component \Vivo\Backend\UI\Explorer\Editor\ContentTab */
         $component = $this->getComponent('contentTab')->getSelectedComponent();
 
-        try {
-            $success = $success && $component->save();
-        }
-        catch(\Exception $e) {
-            throw $e;
-        }
+        $success = $success && $component->save();
 
         if($success) {
             $this->contentTab->removeAllComponents();
@@ -256,24 +291,6 @@ class Editor extends AbstractForm implements TranslatorAwareInterface
             }
         }
 
-        if($this->alert) {
-            if($success) {
-                $this->alert->addMessage('Saved...', Alert::TYPE_SUCCESS);
-            }
-            else {
-                $this->alert->addMessage('Error...', Alert::TYPE_ERROR);
-            }
-        }
-
         return $success;
-    }
-
-    /**
-     * Injects translator
-     * @param \Zend\I18n\Translator\Translator $translator
-     */
-    public function setTranslator(Translator $translator)
-    {
-        $this->translator   = $translator;
     }
 }

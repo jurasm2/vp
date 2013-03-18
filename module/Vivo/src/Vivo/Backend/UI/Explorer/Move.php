@@ -10,6 +10,7 @@ use Vivo\CMS\Model\Document;
 use Vivo\Util\RedirectEvent;
 use Vivo\UI\Alert;
 use Vivo\Service\Initializer\TranslatorAwareInterface;
+use Vivo\CMS\Exception\EntityAlreadyExistsException;
 
 use Zend\I18n\Translator\Translator;
 
@@ -88,15 +89,20 @@ class Move extends AbstractForm implements TranslatorAwareInterface
             //Move - and redirect
             $doc        = $explorer->getEntity();
             $docRelPath = $this->cmsApi->getEntityRelPath($doc);
-            $movedDoc   = $this->documentApi->moveDocument($doc, $explorer->getSite(), $validData['path'],
-                $validData['name_in_path'], $validData['name'], (bool) $validData['create_hyperlink']);
-            $movedDocRelPath   = $this->cmsApi->getEntityRelPath($movedDoc);
-            $explorer->setEntity($movedDoc);
-            $explorer->setCurrent('editor');
-            $message = sprintf($this->translator->translate(
-                "Document at path '%s' has been moved to path '%s'"), $docRelPath, $movedDocRelPath);
-            $this->alert->addMessage($message, Alert::TYPE_SUCCESS);
-            $this->events->trigger(new RedirectEvent());
+            try {
+                $movedDoc   = $this->documentApi->moveDocument($doc, $explorer->getSite(), $validData['path'],
+                    $validData['name_in_path'], $validData['name'], (bool) $validData['create_hyperlink']);
+                $movedDocRelPath   = $this->cmsApi->getEntityRelPath($movedDoc);
+                $explorer->setEntity($movedDoc);
+                $explorer->setCurrent('editor');
+                $message = sprintf($this->translator->translate(
+                    "Document at path '%s' has been moved to path '%s'"), $docRelPath, $movedDocRelPath);
+                $this->alert->addMessage($message, Alert::TYPE_SUCCESS);
+                $this->events->trigger(new RedirectEvent());
+            } catch (EntityAlreadyExistsException $e) {
+                $message = $this->translator->translate("An entity already exists at the target path");
+                $this->alert->addMessage($message, Alert::TYPE_ERROR);
+            }
         } else {
             $message = $this->translator->translate("Form data is not valid");
             $this->alert->addMessage($message, Alert::TYPE_ERROR);
@@ -126,9 +132,11 @@ class Move extends AbstractForm implements TranslatorAwareInterface
         $doc        = $explorer->getEntity();
         $relPath    = $this->cmsApi->getEntityRelPath($doc);
         $path       = $this->pathBuilder->dirname($relPath);
+        $baseName   = $this->pathBuilder->basename($relPath);
 
         $form->get('path')->setValue($path);
         $form->get('name')->setValue($doc->getTitle());
+        $form->get('name_in_path')->setValue($baseName);
         return $form;
     }
 
